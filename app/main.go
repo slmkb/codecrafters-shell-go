@@ -26,11 +26,18 @@ func run() {
 		if !scanner.Scan() {
 			break
 		}
-		commandLine := scanner.Text()
-		commandName := strings.Fields(commandLine)[0]
-		commandArgs := strings.Fields(commandLine)
-		if v, ok := repl.builtins[commandName]; ok {
-			err := v.callback(commandArgs)
+
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		commandName := fields[0]
+		commandArgs := fields
+
+		if cmd, ok := repl.builtins[commandName]; ok {
+			err := cmd.callback(commandArgs)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -57,6 +64,9 @@ func (c replConfig) commandEcho(args []string) error {
 }
 
 func (c replConfig) commandType(args []string) error {
+	if len(args) < 2 {
+		return fmt.Errorf("type: missing operand")
+	}
 	arg1 := args[1]
 	if _, ok := c.builtins[arg1]; !ok {
 		return fmt.Errorf("%s: not found", arg1)
