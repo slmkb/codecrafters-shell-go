@@ -26,9 +26,4 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading input:", err)
-		os.Exit(1)
-	}
-
 }
