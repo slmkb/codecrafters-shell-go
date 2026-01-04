@@ -38,7 +38,7 @@ func run() {
 		commandArgs := fields
 
 		if cmd, ok := repl.builtins[commandName]; ok {
-			err := cmd.callback(commandArgs)
+			err := cmd.callback(commandArgs[1:])
 			if err != nil {
 				fmt.Println(err)
 			}
