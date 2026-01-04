@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -14,6 +15,7 @@ type cliCommand struct {
 
 type replConfig struct {
 	builtins map[string]cliCommand
+	env      map[string]string
 }
 
 func run() {
@@ -68,16 +70,37 @@ func (c replConfig) commandType(args []string) error {
 		return fmt.Errorf("type: missing operand")
 	}
 	arg1 := args[1]
-	if _, ok := c.builtins[arg1]; !ok {
-		return fmt.Errorf("%s: not found", arg1)
+	if _, ok := c.builtins[arg1]; ok {
+		fmt.Printf("%s is a shell builtin\n", arg1)
+		return nil
 	}
-	fmt.Printf("%s is a shell builtin\n", arg1)
-	return nil
+	for _, path := range strings.Split(c.env["PATH"], ":") {
+		filePath := filepath.Clean(filepath.Join(path, arg1))
+		if fi, err := os.Stat(filePath); err == nil {
+			isExecutable := fi.Mode().Perm()&0111 != 0
+			if isExecutable {
+				fmt.Printf("%s is %s\n", arg1, filePath)
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("%s: not found", arg1)
 }
 
 func newRepl() *replConfig {
 	var repl replConfig
 	repl.builtins = make(map[string]cliCommand)
+	repl.env = make(map[string]string)
+	for _, token := range os.Environ() {
+		parts := strings.SplitN(token, "=", 2)
+		if len(parts) < 2 {
+			continue
+		}
+		k := parts[0]
+		v := parts[1]
+		repl.env[k] = v
+	}
 
 	repl.builtins["exit"] = cliCommand{
 		name:     "exit",
