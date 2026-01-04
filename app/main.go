@@ -12,11 +12,19 @@ var _ = fmt.Print
 func main() {
 	// TODO: Uncomment the code below to pass the first stage
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("$ ")
-	for scanner.Scan() {
+	for {
+		fmt.Print("$ ")
+		if !scanner.Scan() {
+			break
+		}
 		command := scanner.Text()
 		fmt.Printf("%s: command not found\n", command)
 		fmt.Print("$ ")
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading input:", err)
+		os.Exit(1)
 	}
 
 }
