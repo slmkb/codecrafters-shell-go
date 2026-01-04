@@ -19,7 +19,11 @@ func main() {
 		}
 		command := scanner.Text()
 		fmt.Printf("%s: command not found\n", command)
-		fmt.Print("$ ")
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading input:", err)
+		os.Exit(1)
 	}
 
 	if err := scanner.Err(); err != nil {
