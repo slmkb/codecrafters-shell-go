@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
@@ -18,6 +19,9 @@ func main() {
 			break
 		}
 		command := scanner.Text()
+		if strings.Fields(command)[0] == "exit" {
+			break
+		}
 		fmt.Printf("%s: command not found\n", command)
 	}
 
