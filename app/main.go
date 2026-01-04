@@ -7,31 +7,18 @@ import (
 	"strings"
 )
 
-// Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
-var _ = fmt.Print
-
-func main() {
-	repl()
-}
-
 type cliCommand struct {
 	name     string
 	callback func([]string) error
 }
 
-func repl() {
+type replConfig struct {
+	builtins map[string]cliCommand
+}
 
-	commands := make(map[string]cliCommand)
+func run() {
 
-	commands["exit"] = cliCommand{
-		name:     "exit",
-		callback: commandExit,
-	}
-
-	commands["echo"] = cliCommand{
-		name:     "echo",
-		callback: commandEcho,
-	}
+	repl := newRepl()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -41,8 +28,8 @@ func repl() {
 		}
 		commandLine := scanner.Text()
 		commandName := strings.Fields(commandLine)[0]
-		commandArgs := strings.Fields(commandLine)[1:]
-		if v, ok := commands[commandName]; ok {
+		commandArgs := strings.Fields(commandLine)
+		if v, ok := repl.builtins[commandName]; ok {
 			err := v.callback(commandArgs)
 			if err != nil {
 				fmt.Println(err)
@@ -59,12 +46,47 @@ func repl() {
 
 }
 
-func commandExit([]string) error {
+func (c replConfig) commandExit([]string) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandEcho(args []string) error {
-	fmt.Println(strings.Join(args, " "))
+func (c replConfig) commandEcho(args []string) error {
+	fmt.Println(strings.Join(args[1:], " ")) //arg[0] == commandName
 	return nil
+}
+
+func (c replConfig) commandType(args []string) error {
+	arg1 := args[1]
+	if _, ok := c.builtins[arg1]; !ok {
+		return fmt.Errorf("%s: not found", arg1)
+	}
+	fmt.Printf("%s is a shell builtin\n", arg1)
+	return nil
+}
+
+func newRepl() *replConfig {
+	var repl replConfig
+	repl.builtins = make(map[string]cliCommand)
+
+	repl.builtins["exit"] = cliCommand{
+		name:     "exit",
+		callback: repl.commandExit,
+	}
+
+	repl.builtins["echo"] = cliCommand{
+		name:     "echo",
+		callback: repl.commandEcho,
+	}
+
+	repl.builtins["type"] = cliCommand{
+		name:     "type",
+		callback: repl.commandType,
+	}
+
+	return &repl
+}
+
+func main() {
+	run()
 }
