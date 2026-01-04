@@ -43,12 +43,12 @@ func run() {
 				fmt.Println(err)
 			}
 		} else {
-			path, err := repl.findExecutablePath(commandName)
+			_, err := repl.findExecutablePath(commandName)
 			if err != nil {
 				fmt.Printf("%s: command %s\n", commandName, err)
 				continue
 			}
-			err = repl.executeExternal(path, commandArgs[1:])
+			err = repl.executeExternal(commandName, commandArgs[1:])
 			if err != nil {
 				fmt.Println(err)
 			}
