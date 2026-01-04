@@ -15,8 +15,8 @@ func main() {
 	fmt.Print("$ ")
 	for scanner.Scan() {
 		command := scanner.Text()
-		fmt.Printf("%s: command not found", command)
-		break
+		fmt.Printf("%s: command not found\n", command)
+		fmt.Print("$ ")
 	}
 
 }
