@@ -11,6 +11,9 @@ func (repl *replConfig) commandCd(args []string) error {
 		return nil
 	}
 	targetDir := args[1]
+	if targetDir == "~" {
+		targetDir = repl.env["HOME"]
+	}
 	fileInfo, err := os.Stat(targetDir)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
