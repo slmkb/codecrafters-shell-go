@@ -91,5 +91,10 @@ func newRepl() *replConfig {
 		callback: repl.commandType,
 	}
 
+	repl.builtins["pwd"] = cliCommand{
+		name:     "pwd",
+		callback: repl.commandPwd,
+	}
+
 	return &repl
 }
