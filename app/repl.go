@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 )
@@ -60,7 +61,7 @@ func run() {
 			}
 			err = repl.executeExternal(commandName, commandArgs[1:])
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 			}
 		}
 	}
