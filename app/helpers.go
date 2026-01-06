@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -105,9 +104,9 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 		}
 	}
 
-	fmt.Printf("argline: %q\n", argLine)
-	fmt.Printf("parsed: %#v\n", parsedArgs)
-	fmt.Printf("out: %q\n", targetStdout)
-	fmt.Printf("err: %q\n", targetStderr)
+	// fmt.Printf("argline: %q\n", argLine)
+	// fmt.Printf("parsed: %#v\n", parsedArgs)
+	// fmt.Printf("out: %q\n", targetStdout)
+	// fmt.Printf("err: %q\n", targetStderr)
 	return parsedArgs, nil
 }
