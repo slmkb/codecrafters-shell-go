@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,7 +69,6 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 				builder.WriteByte(ch)
 			} else {
 				if builder.Len() != 0 && lastChar == '2' {
-					fmt.Println("Im IN")
 					redirectStderr = true
 				} else {
 					redirectStdout = true
@@ -109,7 +107,7 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 				return nil, errors.New("error: wrong redirect target")
 			}
 		}
-		if err := repl.redirectHandler('2', targetStdout); err != nil {
+		if err := repl.redirectHandler('2', targetStderr); err != nil {
 			return nil, err
 		}
 	}
