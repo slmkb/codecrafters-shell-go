@@ -34,6 +34,7 @@ func (repl *replConfig) commandCd(args []string) error {
 	}
 
 	repl.env["PWD"] = targetDir
+	repl.env["TEST"] = "cd"
 
 	return nil
 }

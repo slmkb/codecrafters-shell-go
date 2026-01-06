@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,6 +70,7 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 				builder.WriteByte(ch)
 			} else {
 				if builder.Len() != 0 && lastChar == '2' {
+					fmt.Println("Im IN")
 					redirectStderr = true
 				} else {
 					redirectStdout = true
@@ -85,25 +87,38 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 		return nil, errors.New("error: unterminated quote")
 	}
 
-	if builder.Len() > 0 {
-		if redirectStdout {
-			if len(targetStdout) == 0 {
+	if redirectStdout {
+		if len(targetStdout) == 0 {
+			if builder.Len() > 0 {
 				targetStdout = builder.String()
 				builder.Reset()
+			} else {
+				return nil, errors.New("error: wrong redirect target")
 			}
-			repl.redirectHandler('1', targetStdout)
-		} else if redirectStderr {
-			if len(targetStderr) == 0 {
-				targetStdout = builder.String()
-				builder.Reset()
-			}
-			repl.redirectHandler('2', targetStderr)
 		}
-		if builder.Len() > 0 {
-			parsedArgs = append(parsedArgs, builder.String())
+		// fmt.Println(targetStdout, "HERE HEREH")
+		if err := repl.redirectHandler('1', targetStdout); err != nil {
+			return nil, err
+		}
+	} else if redirectStderr {
+		if len(targetStderr) == 0 {
+			if builder.Len() > 0 {
+				targetStderr = builder.String()
+				builder.Reset()
+			} else {
+				return nil, errors.New("error: wrong redirect target")
+			}
+		}
+		if err := repl.redirectHandler('2', targetStdout); err != nil {
+			return nil, err
 		}
 	}
 
+	if builder.Len() > 0 {
+		parsedArgs = append(parsedArgs, builder.String())
+	}
+
+	// fmt.Println(redirectStdout, redirectStderr)
 	// fmt.Printf("argline: %q\n", argLine)
 	// fmt.Printf("parsed: %#v\n", parsedArgs)
 	// fmt.Printf("out: %q\n", targetStdout)

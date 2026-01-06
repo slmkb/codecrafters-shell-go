@@ -26,6 +26,8 @@ func run() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
+		repl.stderr = os.Stderr
+		repl.stdout = os.Stdout
 		fmt.Print("$ ")
 		if !scanner.Scan() {
 			break
@@ -45,6 +47,8 @@ func run() {
 
 		if cmd, ok := repl.builtins[commandName]; ok {
 			err := cmd.callback(commandArgs)
+			// fmt.Fprintln(repl.stdout, "TEST")
+			// fmt.Fprintln(repl.stdout, repl.env["TEST"])
 			if err != nil {
 				fmt.Fprintln(repl.stderr, err)
 			}
@@ -59,8 +63,6 @@ func run() {
 				fmt.Println(err)
 			}
 		}
-		repl.stderr = os.Stderr
-		repl.stdout = os.Stdout
 	}
 
 	if err := scanner.Err(); err != nil {

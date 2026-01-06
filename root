@@ -1,2 +1,0 @@
-uid=1000(slm) gid=1000(slm) groups=1000(slm),968(docker),998(wheel)
-uid=1000(slm) gid=1000(slm) groups=1000(slm),968(docker),998(wheel)

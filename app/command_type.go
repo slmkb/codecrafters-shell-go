@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (repl replConfig) commandType(args []string) error {
+func (repl *replConfig) commandType(args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("type: missing operand")
 	}
@@ -20,6 +20,7 @@ func (repl replConfig) commandType(args []string) error {
 	}
 
 	fmt.Fprintf(repl.stdout, "%s is %s\n", arg1, path)
+	repl.env["TEST"] = "type"
 	return nil
 
 }
