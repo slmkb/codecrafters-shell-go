@@ -10,6 +10,6 @@ func (repl replConfig) commandPwd(args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(pwd)
+	fmt.Fprintln(repl.stdout, pwd)
 	return nil
 }

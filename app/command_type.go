@@ -10,7 +10,7 @@ func (repl replConfig) commandType(args []string) error {
 	}
 	arg1 := args[1]
 	if _, ok := repl.builtins[arg1]; ok {
-		fmt.Printf("%s is a shell builtin\n", arg1)
+		fmt.Fprintf(repl.stdout, "%s is a shell builtin\n", arg1)
 		return nil
 	}
 
@@ -19,7 +19,7 @@ func (repl replConfig) commandType(args []string) error {
 		return fmt.Errorf("%s: %w", arg1, err)
 	}
 
-	fmt.Printf("%s is %s\n", arg1, path)
+	fmt.Fprintf(repl.stdout, "%s is %s\n", arg1, path)
 	return nil
 
 }

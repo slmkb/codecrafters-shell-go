@@ -15,6 +15,9 @@ type cliCommand struct {
 type replConfig struct {
 	builtins map[string]cliCommand
 	env      map[string]string
+	stdin    *os.File
+	stdout   *os.File
+	stderr   *os.File
 }
 
 func run() {
@@ -35,17 +38,20 @@ func run() {
 
 		fields := strings.Fields(line)
 		commandName := fields[0]
-		commandArgs := fields
+		commandArgs, err := repl.argParser(line)
+		if err != nil {
+			fmt.Fprintln(repl.stderr, err)
+		}
 
 		if cmd, ok := repl.builtins[commandName]; ok {
 			err := cmd.callback(commandArgs)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Fprintln(repl.stderr, err)
 			}
 		} else {
 			_, err := repl.findExecutablePath(commandName)
 			if err != nil {
-				fmt.Printf("%s: command %s\n", commandName, err)
+				fmt.Fprintf(repl.stderr, "%s: command %s\n", commandName, err)
 				continue
 			}
 			err = repl.executeExternal(commandName, commandArgs[1:])
@@ -53,10 +59,12 @@ func run() {
 				fmt.Println(err)
 			}
 		}
+		repl.stderr = os.Stderr
+		repl.stdout = os.Stdout
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading input:", err)
+		fmt.Fprintln(repl.stderr, "Error reading input:", err)
 		os.Exit(1)
 	}
 
@@ -64,7 +72,11 @@ func run() {
 
 func newRepl() *replConfig {
 	var repl replConfig
-	repl.builtins = make(map[string]cliCommand)
+
+	repl.stdin = os.Stdin
+	repl.stdout = os.Stdout
+	repl.stderr = os.Stderr
+
 	repl.env = make(map[string]string)
 	for _, token := range os.Environ() {
 		parts := strings.SplitN(token, "=", 2)
@@ -76,6 +88,7 @@ func newRepl() *replConfig {
 		repl.env[k] = v
 	}
 
+	repl.builtins = make(map[string]cliCommand)
 	repl.builtins["exit"] = cliCommand{
 		name:     "exit",
 		callback: repl.commandExit,

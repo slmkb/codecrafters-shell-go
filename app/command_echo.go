@@ -6,6 +6,6 @@ import (
 )
 
 func (repl replConfig) commandEcho(args []string) error {
-	fmt.Println(strings.Join(args[1:], " "))
+	fmt.Fprintln(repl.stdout, strings.Join(args[1:], " "))
 	return nil
 }
