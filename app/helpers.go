@@ -46,6 +46,8 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 			redirTarget.target = tok
 			if appendMode {
 				redirTarget.options = os.O_APPEND
+			} else {
+				redirTarget.options = os.O_TRUNC
 			}
 			// assign redirect target
 			switch redirFD {
@@ -96,22 +98,22 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 				continue
 			}
 
+			if i+1 < len(argLine) && argLine[i+1] == '>' {
+				appendMode = true
+				i++ // consume the second '>'
+			}
+
 			tok := cur.String()
 			cur.Reset()
-			if redirFD != 0 {
-				appendMode = true
-				continue
-			}
-			// fmt.Printf("tok: %q redir: %d\n", tok, redirFD)
-			if tok == "2" {
+
+			switch tok {
+			case "2":
 				redirFD = 2
-			} else {
-				if tok != "" && tok != "1" {
-					args = append(args, tok)
-				}
-				if redirFD == 0 {
-					redirFD = 1
-				}
+			case "1", "":
+				redirFD = 1
+			default:
+				redirFD = 1
+				args = append(args, tok)
 			}
 			expectTarget = true
 
