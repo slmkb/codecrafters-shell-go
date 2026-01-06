@@ -106,7 +106,7 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 			if tok == "2" {
 				redirFD = 2
 			} else {
-				if tok != "" {
+				if tok != "" && tok != "1" {
 					args = append(args, tok)
 				}
 				if redirFD == 0 {
