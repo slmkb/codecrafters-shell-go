@@ -73,8 +73,14 @@ func run() {
 		fields := strings.Fields(commandLine)
 		commandName := fields[0]
 		commandArgs, err := repl.argParser(commandLine)
+		// fmt.Println(commandLine)
+		// fmt.Println(fields)
+		// fmt.Println(commandName)
+		// fmt.Println(commandArgs)
 		if err != nil {
 			fmt.Fprintln(repl.stderr, err)
+			oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
+			continue
 		}
 
 		if cmd, ok := repl.builtins[commandName]; ok {
@@ -94,7 +100,7 @@ func run() {
 			}
 			err = repl.executeExternal(commandName, commandArgs[1:])
 			if err != nil {
-				// log.Println(err)
+				// fmt.Println(err)
 			}
 		}
 		oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
