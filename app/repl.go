@@ -44,7 +44,7 @@ func run() {
 	b := make([]byte, 1)
 	var line strings.Builder
 
-	for range 40 {
+	for {
 		// oldState, _ := term.MakeRaw(int(os.Stdin.Fd()))
 		fmt.Print("\r$ ", line.String())
 		os.Stdin.Read(b)
