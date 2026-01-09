@@ -46,7 +46,9 @@ func run() {
 
 	for {
 		// oldState, _ := term.MakeRaw(int(os.Stdin.Fd()))
-		fmt.Print("\r$ ", line.String())
+		// repl.stderr = os.Stderr
+		// repl.stdout = os.Stdout
+		fmt.Print("\r\x1b[K$ ", line.String())
 		os.Stdin.Read(b)
 		switch b[0] {
 		case '\t':
@@ -55,10 +57,13 @@ func run() {
 			line.Reset()
 			line.WriteString(newLine)
 			continue
-		case '\r':
-			fmt.Print("\r")
+		case '\r', '\n':
+			// fmt.Print("\r")
 			term.Restore(int(os.Stdin.Fd()), oldState)
+			repl.stderr = os.Stderr
+			repl.stdout = os.Stdout
 			fmt.Println()
+			// fmt.Fprint(repl.stderr, "Where")
 			// fmt.Print("\r\x1b[K")
 		default:
 			line.WriteByte(b[0])
@@ -102,7 +107,7 @@ func run() {
 			}
 			err = repl.executeExternal(commandName, commandArgs[1:])
 			if err != nil {
-				fmt.Println(err)
+				// fmt.Println(err)
 			}
 		}
 		oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
