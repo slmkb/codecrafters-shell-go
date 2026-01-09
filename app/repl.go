@@ -56,8 +56,10 @@ func run() {
 			line.WriteString(newLine)
 			continue
 		case '\r':
+			fmt.Print("\r")
 			term.Restore(int(os.Stdin.Fd()), oldState)
 			fmt.Println()
+			// fmt.Print("\r\x1b[K")
 		default:
 			line.WriteByte(b[0])
 			continue
@@ -100,7 +102,7 @@ func run() {
 			}
 			err = repl.executeExternal(commandName, commandArgs[1:])
 			if err != nil {
-				// fmt.Println(err)
+				fmt.Println(err)
 			}
 		}
 		oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
