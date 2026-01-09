@@ -1,8 +1,11 @@
 package main
 
-import "os"
+import (
+	"errors"
+)
+
+var errExit = errors.New("Exit")
 
 func (repl replConfig) commandExit([]string) error {
-	os.Exit(0)
-	return nil
+	return errExit
 }

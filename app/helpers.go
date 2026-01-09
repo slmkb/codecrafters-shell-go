@@ -153,3 +153,22 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 	// fmt.Printf("err: %q\n", errTarget)
 	return args, nil
 }
+
+func (repl replConfig) autoComplete(line string) string {
+	var token string
+	fields := strings.Fields(line)
+	lastIndex := len(fields) - 1
+	if lastIndex >= 0 {
+		token = fields[lastIndex]
+	}
+	var candidates []string
+	for cmd := range repl.builtins {
+		if strings.HasPrefix(cmd, token) {
+			candidates = append(candidates, cmd)
+		}
+	}
+	if len(candidates) == 1 {
+		return strings.Join(fields[:lastIndex], " ") + candidates[0] + " "
+	}
+	return line
+}

@@ -1,10 +1,12 @@
 package main
 
 import (
-	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
+
+	"golang.org/x/term"
 )
 
 type cliCommand struct {
@@ -24,6 +26,7 @@ func run() {
 
 	repl := newRepl()
 
+	/* scanner ==========================
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		repl.stderr = os.Stderr
@@ -34,28 +37,59 @@ func run() {
 		}
 
 		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
+	====================================*/
+	oldState, _ := term.MakeRaw(int(os.Stdin.Fd()))
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+	b := make([]byte, 1)
+	var line strings.Builder
+
+	for range 40 {
+		// oldState, _ := term.MakeRaw(int(os.Stdin.Fd()))
+		fmt.Print("\r$ ", line.String())
+		os.Stdin.Read(b)
+		switch b[0] {
+		case '\t':
+			// fmt.Println("TAB")
+			newLine := repl.autoComplete(line.String())
+			line.Reset()
+			line.WriteString(newLine)
+			continue
+		case '\r':
+			term.Restore(int(os.Stdin.Fd()), oldState)
+			fmt.Println()
+		default:
+			line.WriteByte(b[0])
 			continue
 		}
 
-		fields := strings.Fields(line)
+		commandLine := strings.TrimSpace(line.String())
+		line.Reset()
+		if commandLine == "" {
+			oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
+			continue
+		}
+
+		fields := strings.Fields(commandLine)
 		commandName := fields[0]
-		commandArgs, err := repl.argParser(line)
+		commandArgs, err := repl.argParser(commandLine)
 		if err != nil {
 			fmt.Fprintln(repl.stderr, err)
 		}
 
 		if cmd, ok := repl.builtins[commandName]; ok {
 			err := cmd.callback(commandArgs)
-			// fmt.Fprintln(repl.stdout, "TEST")
-			// fmt.Fprintln(repl.stdout, repl.env["TEST"])
 			if err != nil {
+				if errors.Is(err, errExit) {
+					return
+				}
 				fmt.Fprintln(repl.stderr, err)
 			}
 		} else {
 			_, err := repl.findExecutablePath(commandName)
 			if err != nil {
 				fmt.Fprintf(repl.stderr, "%s: command %s\n", commandName, err)
+				oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
 				continue
 			}
 			err = repl.executeExternal(commandName, commandArgs[1:])
@@ -63,13 +97,16 @@ func run() {
 				// log.Println(err)
 			}
 		}
+		oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
+		// defer term.Restore(int(os.Stdin.Fd()), oldState)
 	}
 
+	/* scanner
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(repl.stderr, "Error reading input:", err)
 		os.Exit(1)
 	}
-
+	*/
 }
 
 func newRepl() *replConfig {
