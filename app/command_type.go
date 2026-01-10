@@ -18,7 +18,7 @@ func (repl *replConfig) commandType(args []string) error {
 	if err != nil {
 		return fmt.Errorf("%s: %w", arg1, err)
 	}
-
+	// if paths[0] == arg1 {}
 	fmt.Fprintf(repl.stdout, "%s is %s\n", arg1, path)
 	repl.env["TEST"] = "type"
 	return nil

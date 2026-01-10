@@ -161,10 +161,65 @@ func (repl replConfig) autoComplete(line string) string {
 	if lastIndex >= 0 {
 		token = fields[lastIndex]
 	}
-	var candidates []string
+	candidates := make(map[string]struct{}, 0)
+	var candidate string
+	// var candidates []string
+
 	for cmd := range repl.builtins {
 		if strings.HasPrefix(cmd, token) {
-			candidates = append(candidates, cmd)
+			// candidates = append(candidates, cmd)
+			candidates[cmd] = struct{}{}
+			candidate = cmd
+		}
+	}
+
+	for _, path := range strings.Split(repl.env["PATH"], ":") {
+		targetPath := filepath.Clean(filepath.Join(path, token))
+		matches, err := filepath.Glob(targetPath + "*")
+		if err != nil {
+			return line
+		}
+		for _, match := range matches {
+			if fi, err := os.Stat(match); err == nil {
+				isExecutable := fi.Mode().Perm()&0111 != 0
+				if isExecutable {
+					// fmt.Printf("%s is %s\n", arg1, targetPath)
+					// candidates = append(candidates, filepath.Base(match))
+					candidates[filepath.Base(match)] = struct{}{}
+					candidate = filepath.Base(match)
+				}
+			}
+		}
+	}
+	if len(candidates) == 1 {
+		// return strings.Join(fields[:lastIndex], " ") + candidates[0] + " "
+		return strings.Join(fields[:lastIndex], " ") + candidate + " "
+	}
+	return line
+}
+
+func (repl replConfig) externalAutocomplete(line string) string {
+	var token string
+	fields := strings.Fields(line)
+	lastIndex := len(fields) - 1
+	if lastIndex >= 0 {
+		token = fields[lastIndex]
+	}
+	var candidates []string
+	for _, path := range strings.Split(repl.env["PATH"], ":") {
+		targetPath := filepath.Clean(filepath.Join(path, token))
+		matches, err := filepath.Glob(targetPath)
+		if err != nil {
+			return line
+		}
+		for _, match := range matches {
+			if fi, err := os.Stat(match); err == nil {
+				isExecutable := fi.Mode().Perm()&0111 != 0
+				if isExecutable {
+					// fmt.Printf("%s is %s\n", arg1, targetPath)
+					candidates = append(candidates, match)
+				}
+			}
 		}
 	}
 	if len(candidates) == 1 {
