@@ -154,22 +154,22 @@ func (repl *replConfig) argParser(argLine string) ([]string, error) {
 	return args, nil
 }
 
-func (repl replConfig) autoComplete(line string) string {
-	var token string
-	fields := strings.Fields(line)
-	lastIndex := len(fields) - 1
-	if lastIndex >= 0 {
-		token = fields[lastIndex]
-	}
+func (repl replConfig) autoComplete(token string) map[string]struct{} {
+	// var token string
+	// fields := strings.Fields(line)
+	// lastIndex := len(fields) - 1
+	// if lastIndex >= 0 {
+	// 	token = fields[lastIndex]
+	// }
 	candidates := make(map[string]struct{}, 0)
-	var candidate string
+	// var candidate string
 	// var candidates []string
 
 	for cmd := range repl.builtins {
 		if strings.HasPrefix(cmd, token) {
 			// candidates = append(candidates, cmd)
 			candidates[cmd] = struct{}{}
-			candidate = cmd
+			// candidate = cmd
 		}
 	}
 
@@ -177,7 +177,7 @@ func (repl replConfig) autoComplete(line string) string {
 		targetPath := filepath.Clean(filepath.Join(path, token))
 		matches, err := filepath.Glob(targetPath + "*")
 		if err != nil {
-			return line
+			return candidates
 		}
 		for _, match := range matches {
 			if fi, err := os.Stat(match); err == nil {
@@ -186,16 +186,16 @@ func (repl replConfig) autoComplete(line string) string {
 					// fmt.Printf("%s is %s\n", arg1, targetPath)
 					// candidates = append(candidates, filepath.Base(match))
 					candidates[filepath.Base(match)] = struct{}{}
-					candidate = filepath.Base(match)
+					// candidate = filepath.Base(match)
 				}
 			}
 		}
 	}
-	if len(candidates) == 1 {
-		// return strings.Join(fields[:lastIndex], " ") + candidates[0] + " "
-		return strings.Join(fields[:lastIndex], " ") + candidate + " "
-	}
-	return line
+	// if len(candidates) == 1 {
+	// 	// return strings.Join(fields[:lastIndex], " ") + candidates[0] + " "
+	// 	return ca
+	// }
+	return candidates
 }
 
 func (repl replConfig) externalAutocomplete(line string) string {

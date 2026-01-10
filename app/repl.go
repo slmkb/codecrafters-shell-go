@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 
 	"golang.org/x/term"
@@ -34,6 +36,7 @@ func run() error {
 
 	b := make([]byte, 1)
 	var line strings.Builder
+	pressedTab := false
 
 	for {
 		fmt.Print("\r\x1b[K$ " + line.String())
@@ -46,21 +49,46 @@ func run() error {
 		}
 		switch b[0] {
 		case '\t':
-			newLine := repl.autoComplete(line.String())
-			// fmt.Printf("\n\r%q %q\n", line.String(), newLine)
-			if newLine == line.String() {
-				fmt.Print("\x07")
+			var token string
+			fields := strings.Fields(line.String())
+			lastIndex := len(fields) - 1
+			if lastIndex >= 0 {
+				token = fields[lastIndex]
 			}
-			line.Reset()
-			line.WriteString(newLine)
+			candidates := repl.autoComplete(token)
+
+			// fmt.Printf("\n%#v\n", candidates)
+			switch len(candidates) {
+			case 0:
+				fmt.Print("\x07")
+			case 1:
+				line.Reset()
+				var command string
+				for k := range candidates {
+					command = k
+				}
+				newLine := strings.Join(fields[:lastIndex], " ") + command + " "
+				line.WriteString(newLine)
+			default:
+				fmt.Print("\x07")
+				if pressedTab {
+					fmt.Print("\n\r\x1b[K")
+					sortedCandidates := slices.Sorted(maps.Keys(candidates))
+					fmt.Println(strings.Join(sortedCandidates, "  "))
+				}
+				pressedTab = false
+			}
+			pressedTab = true
 			continue
 		case '\r', '\n':
 			term.Restore(int(os.Stdin.Fd()), oldState)
 			repl.stderr = os.Stderr
 			repl.stdout = os.Stdout
 			fmt.Println()
+			pressedTab = false
 		default:
 			line.WriteByte(b[0])
+			pressedTab = false
 			continue
 		}
 
