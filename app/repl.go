@@ -22,49 +22,43 @@ type replConfig struct {
 	stderr   *os.File
 }
 
-func run() {
+func run() error {
 
 	repl := newRepl()
 
-	/* scanner ==========================
-	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		repl.stderr = os.Stderr
-		repl.stdout = os.Stdout
-		fmt.Print("$ ")
-		if !scanner.Scan() {
-			break
-		}
-
-		line := strings.TrimSpace(scanner.Text())
-	====================================*/
-	oldState, _ := term.MakeRaw(int(os.Stdin.Fd()))
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		return err
+	}
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
 	b := make([]byte, 1)
 	var line strings.Builder
 
 	for {
-		// oldState, _ := term.MakeRaw(int(os.Stdin.Fd()))
-		// repl.stderr = os.Stderr
-		// repl.stdout = os.Stdout
-		fmt.Print("\r\x1b[K$ ", line.String())
-		os.Stdin.Read(b)
+		fmt.Print("\r\x1b[K$ " + line.String())
+		n, err := os.Stdin.Read(b)
+		if err != nil {
+			return err
+		}
+		if n != 1 {
+			return errors.New("received EOF")
+		}
 		switch b[0] {
 		case '\t':
-			// fmt.Println("TAB")
 			newLine := repl.autoComplete(line.String())
+			// fmt.Printf("\n\r%q %q\n", line.String(), newLine)
+			if newLine == line.String() {
+				fmt.Print("\x07")
+			}
 			line.Reset()
 			line.WriteString(newLine)
 			continue
 		case '\r', '\n':
-			// fmt.Print("\r")
 			term.Restore(int(os.Stdin.Fd()), oldState)
 			repl.stderr = os.Stderr
 			repl.stdout = os.Stdout
 			fmt.Println()
-			// fmt.Fprint(repl.stderr, "Where")
-			// fmt.Print("\r\x1b[K")
 		default:
 			line.WriteByte(b[0])
 			continue
@@ -73,20 +67,19 @@ func run() {
 		commandLine := strings.TrimSpace(line.String())
 		line.Reset()
 		if commandLine == "" {
-			oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
+			if _, err := term.MakeRaw(int(os.Stdin.Fd())); err != nil {
+				return err
+			}
 			continue
 		}
 
-		fields := strings.Fields(commandLine)
-		commandName := fields[0]
 		commandArgs, err := repl.argParser(commandLine)
-		// fmt.Println(commandLine)
-		// fmt.Println(fields)
-		// fmt.Println(commandName)
-		// fmt.Println(commandArgs)
+		commandName := commandArgs[0]
 		if err != nil {
 			fmt.Fprintln(repl.stderr, err)
-			oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
+			if _, err := term.MakeRaw(int(os.Stdin.Fd())); err != nil {
+				return err
+			}
 			continue
 		}
 
@@ -94,7 +87,7 @@ func run() {
 			err := cmd.callback(commandArgs)
 			if err != nil {
 				if errors.Is(err, errExit) {
-					return
+					return err
 				}
 				fmt.Fprintln(repl.stderr, err)
 			}
@@ -102,24 +95,20 @@ func run() {
 			_, err := repl.findExecutablePath(commandName)
 			if err != nil {
 				fmt.Fprintf(repl.stderr, "%s: command %s\n", commandName, err)
-				oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
+				if _, err := term.MakeRaw(int(os.Stdin.Fd())); err != nil {
+					return err
+				}
 				continue
 			}
-			err = repl.executeExternal(commandName, commandArgs[1:])
-			if err != nil {
-				// fmt.Println(err)
+			if err := repl.executeExternal(commandName, commandArgs[1:]); err != nil {
+				// return err
 			}
 		}
-		oldState, _ = term.MakeRaw(int(os.Stdin.Fd()))
-		// defer term.Restore(int(os.Stdin.Fd()), oldState)
+		if _, err := term.MakeRaw(int(os.Stdin.Fd())); err != nil {
+			return err
+		}
 	}
 
-	/* scanner
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(repl.stderr, "Error reading input:", err)
-		os.Exit(1)
-	}
-	*/
 }
 
 func newRepl() *replConfig {
