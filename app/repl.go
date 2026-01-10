@@ -49,13 +49,13 @@ func run() error {
 		}
 		switch b[0] {
 		case '\t':
-			var token string
+			var command string
 			fields := strings.Fields(line.String())
 			lastIndex := len(fields) - 1
 			if lastIndex >= 0 {
-				token = fields[lastIndex]
+				command = fields[lastIndex]
 			}
-			candidates := repl.autoComplete(token)
+			candidates := repl.autoComplete(command)
 
 			// fmt.Printf("\n%#v\n", candidates)
 			switch len(candidates) {
@@ -63,21 +63,22 @@ func run() error {
 				fmt.Print("\x07")
 			case 1:
 				line.Reset()
-				var command string
 				for k := range candidates {
-					command = k
+					command = k + " "
 				}
-				newLine := strings.Join(fields[:lastIndex], " ") + command + " "
-				line.WriteString(newLine)
 			default:
 				fmt.Print("\x07")
+				line.Reset()
+				sortedCandidates := slices.Sorted(maps.Keys(candidates))
+				command = longestCommonPrefix(sortedCandidates, command)
 				if pressedTab {
 					fmt.Print("\n\r\x1b[K")
-					sortedCandidates := slices.Sorted(maps.Keys(candidates))
 					fmt.Println(strings.Join(sortedCandidates, "  "))
 				}
 				pressedTab = false
 			}
+			newLine := strings.Join(fields[:lastIndex], " ") + command
+			line.WriteString(newLine)
 			pressedTab = true
 			continue
 		case '\r', '\n':
